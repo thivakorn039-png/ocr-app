@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสแกนบัตรประชาชน</title>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; padding: 20px; max-width: 500px; margin: auto; background-color: #f0f2f5;}
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        h2 { color: #333; }
+        input[type="file"] { margin: 15px 0; }
+        img { max-width: 100%; border-radius: 8px; margin-bottom: 15px; }
+        button { background: #0066cc; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;}
+        button:disabled { background: #cccccc; cursor: not-allowed; }
+        .result-box { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #e0e0e0; }
+        .result-box p { margin: 8px 0; font-size: 15px; }
+        #status { margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>สแกนบัตรประชาชน</h2>
+    <input type="file" id="imageInput" accept="image/*" capture="environment" />
+    <img id="preview" style="display:none;" />
+    <button id="uploadBtn" onclick="processImage()">ดึงข้อมูล</button>
+    <p id="status"></p>
+
+    <div class="result-box" id="result" style="display:none;">
+        <p><strong>เลขประจำตัว:</strong> <span id="res-id"></span></p>
+        <p><strong>ชื่อ-สกุล:</strong> <span id="res-name"></span></p>
+        <p><strong>วันเกิด:</strong> <span id="res-dob"></span></p>
+        <p><strong>ศาสนา:</strong> <span id="res-religion"></span></p>
+        <p><strong>ที่อยู่:</strong> <span id="res-address"></span></p>
+    </div>
+</div>
+
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    let base64Image = '';
+
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                base64Image = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    async function processImage() {
+        if (!base64Image) {
+            alert('กรุณาเลือกรูปภาพก่อนครับ');
+            return;
+        }
+
+        const btn = document.getElementById('uploadBtn');
+        const status = document.getElementById('status');
+        btn.disabled = true;
+        status.innerText = 'กำลังประมวลผล...';
+        status.style.color = 'orange';
+        document.getElementById('result').style.display = 'none';
+
+        try {
+            // ยิงไปที่ API ของเราเอง (server.js ที่รันอยู่)
+            const response = await fetch('/api/ocr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: base64Image })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                document.getElementById('res-id').innerText = result.data.id;
+                document.getElementById('res-name').innerText = result.data.name;
+                document.getElementById('res-dob').innerText = result.data.dob;
+                document.getElementById('res-religion').innerText = result.data.religion;
+                document.getElementById('res-address').innerText = result.data.address;
+                
+                document.getElementById('result').style.display = 'block';
+                status.innerText = 'สำเร็จ!';
+                status.style.color = 'green';
+            } else {
+                status.innerText = 'ข้อผิดพลาด: ' + result.error;
+                status.style.color = 'red';
+            }
+        } catch (error) {
+            status.innerText = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (กำลังปลุกเซิร์ฟเวอร์ โปรดลองใหม่ใน 1 นาที)';
+            status.style.color = 'red';
+        }
+        btn.disabled = false;
+    }
+</script>
+
+</body>
+</html>
