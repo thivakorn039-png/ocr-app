@@ -36,8 +36,8 @@ app.post('/api/ocr', async (req, res) => {
         const idMatch = text.match(/\b\d\s\d{4}\s\d{5}\s\d{2}\s\d\b/);
         const idNumber = idMatch ? idMatch[0].replace(/\s/g, '') : 'ไม่พบข้อมูล';
 
-        const nameMatch = text.match(/(นาย|นาง|นางสาว)\s+([ก-๙]+)\s+([ก-๙]+)/);
-        const name = nameMatch ? nameMatch[0] : 'ไม่พบข้อมูล';
+        const nameMatch = text.match(/(นาย|นาง|นางสาว)\s+([ก-๙]+)\s+([ก-๙]+)(?:\s+([ก-๙]+))?/);
+        const name = nameMatch ? nameMatch[0].replace(/\n/g, ' ') : 'ไม่พบข้อมูล';
 
         const dobMatch = text.match(/เกิดวันที่\s*(\d{1,2}\s*[ก-๙\.\s]+\d{4})/);
         const dob = dobMatch ? dobMatch[1] : 'ไม่พบข้อมูล';
@@ -45,8 +45,8 @@ app.post('/api/ocr', async (req, res) => {
         const religionMatch = text.match(/ศาสนา\s*([ก-๙]+)/);
         const religion = religionMatch ? religionMatch[1] : 'ไม่พบข้อมูล';
 
-        const addressMatch = text.match(/(?:ที่อยู่|ที่อยู่)\s*([\s\S]*?)(?=\s*(?:วันออกบัตร|Date of Issue|6 ส\.ค\.|[0-9]{1,2}\s*[ก-๙]+\.?\s*[0-9]{4}))/);
-        const address = addressMatch ? addressMatch[1].replace(/\n/g, ' ').trim() : 'ไม่พบข้อมูล';
+        const addressMatch = text.match(/(?:ที่อยู่|ที่อยู่)\s*([\s\S]*?)(?=\s*(?:วันออกบัตร|Date of Issue|[0-9]{1,2}\s*[ก-๙\.\s]+\d{4}))/);
+        let address = addressMatch ? addressMatch[1].replace(/\n/g, ' ').trim() : 'ไม่พบข้อมูล';
 
         res.status(200).json({
             data: { id: idNumber, name: name, dob: dob, religion: religion, address: address }
