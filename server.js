@@ -39,7 +39,7 @@ app.post('/api/ocr', async (req, res) => {
         const nameMatch = text.match(/(นาย|นาง|นางสาว)\s+([ก-๙]+)\s+([ก-๙]+)/);
         const name = nameMatch ? nameMatch[0] : 'ไม่พบข้อมูล';
 
-        const dobMatch = text.match(/เกิดวันที่\s*(\d{1,2}\s*[ก-๙]+\.?\s*\d{4})/);
+        const dobMatch = text.match(/เกิดวันที่\s*(\d{1,2}\s*[ก-๙\.\s]+\d{4})/);
         const dob = dobMatch ? dobMatch[1] : 'ไม่พบข้อมูล';
 
         const religionMatch = text.match(/ศาสนา\s*([ก-๙]+)/);
